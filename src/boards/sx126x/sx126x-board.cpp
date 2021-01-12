@@ -51,7 +51,8 @@ extern "C"
 	void SX126xIoInit(void)
 	{
 
-		initSPI();
+		//initSPI();
+		SPI.begin();
 
 		dio3IsOutput = false;
 
@@ -165,10 +166,10 @@ extern "C"
 
 		digitalWrite(_hwConfig.PIN_LORA_NSS, LOW);
 
-		SPI_LORA.beginTransaction(spiSettings);
-		SPI_LORA.transfer(RADIO_GET_STATUS);
-		SPI_LORA.transfer(0x00);
-		SPI_LORA.endTransaction();
+		SPI.beginTransaction(spiSettings);
+		SPI.transfer(RADIO_GET_STATUS);
+		SPI.transfer(0x00);
+		SPI.endTransaction();
 		digitalWrite(_hwConfig.PIN_LORA_NSS, HIGH);
 
 		// Wait for chip to be ready.
@@ -183,15 +184,15 @@ extern "C"
 
 		digitalWrite(_hwConfig.PIN_LORA_NSS, LOW);
 
-		SPI_LORA.beginTransaction(spiSettings);
-		SPI_LORA.transfer((uint8_t)command);
+		SPI.beginTransaction(spiSettings);
+		SPI.transfer((uint8_t)command);
 
 		for (uint16_t i = 0; i < size; i++)
 		{
-			SPI_LORA.transfer(buffer[i]);
+			SPI.transfer(buffer[i]);
 		}
 
-		SPI_LORA.endTransaction();
+		SPI.endTransaction();
 		digitalWrite(_hwConfig.PIN_LORA_NSS, HIGH);
 
 		if (command != RADIO_SET_SLEEP)
@@ -206,15 +207,15 @@ extern "C"
 
 		digitalWrite(_hwConfig.PIN_LORA_NSS, LOW);
 
-		SPI_LORA.beginTransaction(spiSettings);
-		SPI_LORA.transfer((uint8_t)command);
-		SPI_LORA.transfer(0x00);
+		SPI.beginTransaction(spiSettings);
+		SPI.transfer((uint8_t)command);
+		SPI.transfer(0x00);
 		for (uint16_t i = 0; i < size; i++)
 		{
-			buffer[i] = SPI_LORA.transfer(0x00);
+			buffer[i] = SPI.transfer(0x00);
 		}
 
-		SPI_LORA.endTransaction();
+		SPI.endTransaction();
 		digitalWrite(_hwConfig.PIN_LORA_NSS, HIGH);
 
 		SX126xWaitOnBusy();
@@ -226,17 +227,17 @@ extern "C"
 
 		digitalWrite(_hwConfig.PIN_LORA_NSS, LOW);
 
-		SPI_LORA.beginTransaction(spiSettings);
-		SPI_LORA.transfer(RADIO_WRITE_REGISTER);
-		SPI_LORA.transfer((address & 0xFF00) >> 8);
-		SPI_LORA.transfer(address & 0x00FF);
+		SPI.beginTransaction(spiSettings);
+		SPI.transfer(RADIO_WRITE_REGISTER);
+		SPI.transfer((address & 0xFF00) >> 8);
+		SPI.transfer(address & 0x00FF);
 
 		for (uint16_t i = 0; i < size; i++)
 		{
-			SPI_LORA.transfer(buffer[i]);
+			SPI.transfer(buffer[i]);
 		}
 
-		SPI_LORA.endTransaction();
+		SPI.endTransaction();
 		digitalWrite(_hwConfig.PIN_LORA_NSS, HIGH);
 
 		SX126xWaitOnBusy();
@@ -253,16 +254,16 @@ extern "C"
 
 		digitalWrite(_hwConfig.PIN_LORA_NSS, LOW);
 
-		SPI_LORA.beginTransaction(spiSettings);
-		SPI_LORA.transfer(RADIO_READ_REGISTER);
-		SPI_LORA.transfer((address & 0xFF00) >> 8);
-		SPI_LORA.transfer(address & 0x00FF);
-		SPI_LORA.transfer(0x00);
+		SPI.beginTransaction(spiSettings);
+		SPI.transfer(RADIO_READ_REGISTER);
+		SPI.transfer((address & 0xFF00) >> 8);
+		SPI.transfer(address & 0x00FF);
+		SPI.transfer(0x00);
 		for (uint16_t i = 0; i < size; i++)
 		{
-			buffer[i] = SPI_LORA.transfer(0x00);
+			buffer[i] = SPI.transfer(0x00);
 		}
-		SPI_LORA.endTransaction();
+		SPI.endTransaction();
 		digitalWrite(_hwConfig.PIN_LORA_NSS, HIGH);
 
 		SX126xWaitOnBusy();
@@ -281,14 +282,14 @@ extern "C"
 
 		digitalWrite(_hwConfig.PIN_LORA_NSS, LOW);
 
-		SPI_LORA.beginTransaction(spiSettings);
-		SPI_LORA.transfer(RADIO_WRITE_BUFFER);
-		SPI_LORA.transfer(offset);
+		SPI.beginTransaction(spiSettings);
+		SPI.transfer(RADIO_WRITE_BUFFER);
+		SPI.transfer(offset);
 		for (uint16_t i = 0; i < size; i++)
 		{
-			SPI_LORA.transfer(buffer[i]);
+			SPI.transfer(buffer[i]);
 		}
-		SPI_LORA.endTransaction();
+		SPI.endTransaction();
 		digitalWrite(_hwConfig.PIN_LORA_NSS, HIGH);
 
 		SX126xWaitOnBusy();
@@ -300,15 +301,15 @@ extern "C"
 
 		digitalWrite(_hwConfig.PIN_LORA_NSS, LOW);
 
-		SPI_LORA.beginTransaction(spiSettings);
-		SPI_LORA.transfer(RADIO_READ_BUFFER);
-		SPI_LORA.transfer(offset);
-		SPI_LORA.transfer(0x00);
+		SPI.beginTransaction(spiSettings);
+		SPI.transfer(RADIO_READ_BUFFER);
+		SPI.transfer(offset);
+		SPI.transfer(0x00);
 		for (uint16_t i = 0; i < size; i++)
 		{
-			buffer[i] = SPI_LORA.transfer(0x00);
+			buffer[i] = SPI.transfer(0x00);
 		}
-		SPI_LORA.endTransaction();
+		SPI.endTransaction();
 		digitalWrite(_hwConfig.PIN_LORA_NSS, HIGH);
 
 		SX126xWaitOnBusy();
@@ -346,105 +347,105 @@ extern "C"
 			// Read 0x0580
 			SX126xWaitOnBusy();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, LOW);
-			SPI_LORA.beginTransaction(spiSettings);
-			SPI_LORA.transfer(RADIO_READ_REGISTER);
-			SPI_LORA.transfer((0x0580 & 0xFF00) >> 8);
-			SPI_LORA.transfer(0x0580 & 0x00FF);
-			SPI_LORA.transfer(0x00);
-			reg_0x0580 = SPI_LORA.transfer(0x00);
-			SPI_LORA.endTransaction();
+			SPI.beginTransaction(spiSettings);
+			SPI.transfer(RADIO_READ_REGISTER);
+			SPI.transfer((0x0580 & 0xFF00) >> 8);
+			SPI.transfer(0x0580 & 0x00FF);
+			SPI.transfer(0x00);
+			reg_0x0580 = SPI.transfer(0x00);
+			SPI.endTransaction();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, HIGH);
 
 			// Read 0x0583
 			SX126xWaitOnBusy();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, LOW);
-			SPI_LORA.beginTransaction(spiSettings);
-			SPI_LORA.transfer(RADIO_READ_REGISTER);
-			SPI_LORA.transfer((0x0583 & 0xFF00) >> 8);
-			SPI_LORA.transfer(0x0583 & 0x00FF);
-			SPI_LORA.transfer(0x00);
-			reg_0x0583 = SPI_LORA.transfer(0x00);
-			SPI_LORA.endTransaction();
+			SPI.beginTransaction(spiSettings);
+			SPI.transfer(RADIO_READ_REGISTER);
+			SPI.transfer((0x0583 & 0xFF00) >> 8);
+			SPI.transfer(0x0583 & 0x00FF);
+			SPI.transfer(0x00);
+			reg_0x0583 = SPI.transfer(0x00);
+			SPI.endTransaction();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, HIGH);
 
 			// Read 0x0584
 			SX126xWaitOnBusy();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, LOW);
-			SPI_LORA.beginTransaction(spiSettings);
-			SPI_LORA.transfer(RADIO_READ_REGISTER);
-			SPI_LORA.transfer((0x0584 & 0xFF00) >> 8);
-			SPI_LORA.transfer(0x0584 & 0x00FF);
-			SPI_LORA.transfer(0x00);
-			reg_0x0584 = SPI_LORA.transfer(0x00);
-			SPI_LORA.endTransaction();
+			SPI.beginTransaction(spiSettings);
+			SPI.transfer(RADIO_READ_REGISTER);
+			SPI.transfer((0x0584 & 0xFF00) >> 8);
+			SPI.transfer(0x0584 & 0x00FF);
+			SPI.transfer(0x00);
+			reg_0x0584 = SPI.transfer(0x00);
+			SPI.endTransaction();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, HIGH);
 
 			// Read 0x0585
 			SX126xWaitOnBusy();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, LOW);
-			SPI_LORA.beginTransaction(spiSettings);
-			SPI_LORA.transfer(RADIO_READ_REGISTER);
-			SPI_LORA.transfer((0x0585 & 0xFF00) >> 8);
-			SPI_LORA.transfer(0x0585 & 0x00FF);
-			SPI_LORA.transfer(0x00);
-			reg_0x0585 = SPI_LORA.transfer(0x00);
-			SPI_LORA.endTransaction();
+			SPI.beginTransaction(spiSettings);
+			SPI.transfer(RADIO_READ_REGISTER);
+			SPI.transfer((0x0585 & 0xFF00) >> 8);
+			SPI.transfer(0x0585 & 0x00FF);
+			SPI.transfer(0x00);
+			reg_0x0585 = SPI.transfer(0x00);
+			SPI.endTransaction();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, HIGH);
 
 			// Write 0x0580
 			// SX126xWriteRegister(0x0580, reg_0x0580 | 0x08);
 			SX126xWaitOnBusy();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, LOW);
-			SPI_LORA.beginTransaction(spiSettings);
-			SPI_LORA.transfer(RADIO_WRITE_REGISTER);
-			SPI_LORA.transfer((0x0580 & 0xFF00) >> 8);
-			SPI_LORA.transfer(0x0580 & 0x00FF);
-			SPI_LORA.transfer(reg_0x0580 | 0x08);
-			SPI_LORA.endTransaction();
+			SPI.beginTransaction(spiSettings);
+			SPI.transfer(RADIO_WRITE_REGISTER);
+			SPI.transfer((0x0580 & 0xFF00) >> 8);
+			SPI.transfer(0x0580 & 0x00FF);
+			SPI.transfer(reg_0x0580 | 0x08);
+			SPI.endTransaction();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, HIGH);
 
 			// Write 0x0583
 			SX126xWaitOnBusy();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, LOW);
-			SPI_LORA.beginTransaction(spiSettings);
-			SPI_LORA.transfer(RADIO_WRITE_REGISTER);
-			SPI_LORA.transfer((0x0583 & 0xFF00) >> 8);
-			SPI_LORA.transfer(0x0583 & 0x00FF);
-			SPI_LORA.transfer(reg_0x0583 & ~0x08);
-			SPI_LORA.endTransaction();
+			SPI.beginTransaction(spiSettings);
+			SPI.transfer(RADIO_WRITE_REGISTER);
+			SPI.transfer((0x0583 & 0xFF00) >> 8);
+			SPI.transfer(0x0583 & 0x00FF);
+			SPI.transfer(reg_0x0583 & ~0x08);
+			SPI.endTransaction();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, HIGH);
 
 			// Write 0x0584
 			SX126xWaitOnBusy();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, LOW);
-			SPI_LORA.beginTransaction(spiSettings);
-			SPI_LORA.transfer(RADIO_WRITE_REGISTER);
-			SPI_LORA.transfer((0x0584 & 0xFF00) >> 8);
-			SPI_LORA.transfer(0x0584 & 0x00FF);
-			SPI_LORA.transfer(reg_0x0584 & ~0x08);
-			SPI_LORA.endTransaction();
+			SPI.beginTransaction(spiSettings);
+			SPI.transfer(RADIO_WRITE_REGISTER);
+			SPI.transfer((0x0584 & 0xFF00) >> 8);
+			SPI.transfer(0x0584 & 0x00FF);
+			SPI.transfer(reg_0x0584 & ~0x08);
+			SPI.endTransaction();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, HIGH);
 
 			// Write 0x0585
 			SX126xWaitOnBusy();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, LOW);
-			SPI_LORA.beginTransaction(spiSettings);
-			SPI_LORA.transfer(RADIO_WRITE_REGISTER);
-			SPI_LORA.transfer((0x0585 & 0xFF00) >> 8);
-			SPI_LORA.transfer(0x0585 & 0x00FF);
-			SPI_LORA.transfer(reg_0x0585 & ~0x08);
-			SPI_LORA.endTransaction();
+			SPI.beginTransaction(spiSettings);
+			SPI.transfer(RADIO_WRITE_REGISTER);
+			SPI.transfer((0x0585 & 0xFF00) >> 8);
+			SPI.transfer(0x0585 & 0x00FF);
+			SPI.transfer(reg_0x0585 & ~0x08);
+			SPI.endTransaction();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, HIGH);
 
 			// Write 0x0920
 			SX126xWaitOnBusy();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, LOW);
-			SPI_LORA.beginTransaction(spiSettings);
-			SPI_LORA.transfer(RADIO_WRITE_REGISTER);
-			SPI_LORA.transfer((0x0920 & 0xFF00) >> 8);
-			SPI_LORA.transfer(0x0920 & 0x00FF);
-			SPI_LORA.transfer(0x06);
-			SPI_LORA.endTransaction();
+			SPI.beginTransaction(spiSettings);
+			SPI.transfer(RADIO_WRITE_REGISTER);
+			SPI.transfer((0x0920 & 0xFF00) >> 8);
+			SPI.transfer(0x0920 & 0x00FF);
+			SPI.transfer(0x06);
+			SPI.endTransaction();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, HIGH);
 
 			dio3IsOutput = true;
@@ -455,23 +456,23 @@ extern "C"
 			// Set DIO3 High
 			SX126xWaitOnBusy();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, LOW);
-			SPI_LORA.beginTransaction(spiSettings);
-			SPI_LORA.transfer(RADIO_READ_REGISTER);
-			SPI_LORA.transfer((0x0920 & 0xFF00) >> 8);
-			SPI_LORA.transfer(0x0920 & 0x00FF);
-			SPI_LORA.transfer(0x00);
-			reg_0x0920 = SPI_LORA.transfer(0x00);
-			SPI_LORA.endTransaction();
+			SPI.beginTransaction(spiSettings);
+			SPI.transfer(RADIO_READ_REGISTER);
+			SPI.transfer((0x0920 & 0xFF00) >> 8);
+			SPI.transfer(0x0920 & 0x00FF);
+			SPI.transfer(0x00);
+			reg_0x0920 = SPI.transfer(0x00);
+			SPI.endTransaction();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, HIGH);
 
 			SX126xWaitOnBusy();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, LOW);
-			SPI_LORA.beginTransaction(spiSettings);
-			SPI_LORA.transfer(RADIO_WRITE_REGISTER);
-			SPI_LORA.transfer((0x0920 & 0xFF00) >> 8);
-			SPI_LORA.transfer(0x0920 & 0x00FF);
-			SPI_LORA.transfer(reg_0x0920 | 0x08);
-			SPI_LORA.endTransaction();
+			SPI.beginTransaction(spiSettings);
+			SPI.transfer(RADIO_WRITE_REGISTER);
+			SPI.transfer((0x0920 & 0xFF00) >> 8);
+			SPI.transfer(0x0920 & 0x00FF);
+			SPI.transfer(reg_0x0920 | 0x08);
+			SPI.endTransaction();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, HIGH);
 		}
 		else
@@ -479,23 +480,23 @@ extern "C"
 			// Set DIO3 Low
 			SX126xWaitOnBusy();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, LOW);
-			SPI_LORA.beginTransaction(spiSettings);
-			SPI_LORA.transfer(RADIO_READ_REGISTER);
-			SPI_LORA.transfer((0x0920 & 0xFF00) >> 8);
-			SPI_LORA.transfer(0x0920 & 0x00FF);
-			SPI_LORA.transfer(0x00);
-			reg_0x0920 = SPI_LORA.transfer(0x00);
-			SPI_LORA.endTransaction();
+			SPI.beginTransaction(spiSettings);
+			SPI.transfer(RADIO_READ_REGISTER);
+			SPI.transfer((0x0920 & 0xFF00) >> 8);
+			SPI.transfer(0x0920 & 0x00FF);
+			SPI.transfer(0x00);
+			reg_0x0920 = SPI.transfer(0x00);
+			SPI.endTransaction();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, HIGH);
 
 			SX126xWaitOnBusy();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, LOW);
-			SPI_LORA.beginTransaction(spiSettings);
-			SPI_LORA.transfer(RADIO_WRITE_REGISTER);
-			SPI_LORA.transfer((0x0920 & 0xFF00) >> 8);
-			SPI_LORA.transfer(0x0920 & 0x00FF);
-			SPI_LORA.transfer(reg_0x0920 & ~0x08);
-			SPI_LORA.endTransaction();
+			SPI.beginTransaction(spiSettings);
+			SPI.transfer(RADIO_WRITE_REGISTER);
+			SPI.transfer((0x0920 & 0xFF00) >> 8);
+			SPI.transfer(0x0920 & 0x00FF);
+			SPI.transfer(reg_0x0920 & ~0x08);
+			SPI.endTransaction();
 			digitalWrite(_hwConfig.PIN_LORA_NSS, HIGH);
 		}
 	}
