@@ -33,15 +33,16 @@ Maintainer: Miguel Luis, Gregory Cristian and Wael Guibene
  *	OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *****************************************************************************/
-#ifdef NRF52_SERIES
+#if defined(ARDUINO_ARCH_MBED)
 #include "boards/mcu/timer.h"
 #include "boards/mcu/board.h"
 #include "app_util.h"
+#include <mbed.h>
 
 extern "C"
-{
-
-	SoftwareTimer timerTickers[10];
+{  
+	mbed::Ticker  timerTickers[10]; // calls a callback repeatedly with a timeout
+	mbed::Timeout timeoutTickers[10];  // calls a callback once when a timeout expires
 	uint32_t timerTimes[10];
 	bool timerInUse[10] = {false, false, false, false, false, false, false, false, false, false};
 
@@ -62,14 +63,6 @@ extern "C"
 				timerInUse[idx] = true;
 				obj->timerNum = idx;
 				obj->Callback = callback;
-				if (obj->oneShot)
-				{
-					timerTickers[idx].begin(10000, (TimerCallbackFunction_t)obj->Callback, NULL, false);
-				}
-				else
-				{
-					timerTickers[idx].begin(10000, (TimerCallbackFunction_t)obj->Callback, NULL, true);
-				}
 				return;
 			}
 		}
@@ -83,31 +76,47 @@ extern "C"
 
 	void TimerStart(TimerEvent_t *obj)
 	{
-		int idx = obj->timerNum;
-
-		timerTickers[idx].stop();
-		timerTickers[idx].start();
+        int idx = obj->timerNum;
+		if (obj->oneShot)
+		{
+			//timerTickers[idx].once_ms(timerTimes[idx], obj->Callback);
+			//timeout.attach(mbed::callback(this, &Tone::stop), duration * 1ms);
+			timeoutTickers[idx].attach(mbed::callback(timerTimes[idx], obj->Callback), 1000);
+		}
+		else
+		{
+			//timerTickers[idx].attach_ms(timerTimes[idx], obj->Callback);
+			//ticker.attach(mbed::callback(this, &ServoImpl::call), 0.02f);
+			timerTickers[idx].attach(mbed::callback(timerTimes[idx], obj->Callback),1000);
+		}
 	}
 
 	void TimerStop(TimerEvent_t *obj)
 	{
 		int idx = obj->timerNum;
-		timerTickers[idx].stop();
+		timerTickers[idx].detach();
 	}
 
 	void TimerReset(TimerEvent_t *obj)
 	{
 		int idx = obj->timerNum;
-
-		timerTickers[idx].stop();
-		timerTickers[idx].reset();
+		timerTickers[idx].detach();
+		if (obj->oneShot)
+		{
+			//timerTickers[idx].once_ms(timerTimes[idx], obj->Callback);
+			timeoutTickers[idx].attach(mbed::callback(timerTimes[idx], obj->Callback), 1000);
+		}
+		else
+		{
+			//timerTickers[idx].attach_ms(timerTimes[idx], obj->Callback);
+			timerTickers[idx].attach(mbed::callback(timerTimes[idx], obj->Callback),1000);
+		}
 	}
 
 	void TimerSetValue(TimerEvent_t *obj, uint32_t value)
 	{
 		int idx = obj->timerNum;
 		timerTimes[idx] = value;
-		timerTickers[idx].setPeriod(value);
 	}
 
 	TimerTime_t TimerGetCurrentTime(void)

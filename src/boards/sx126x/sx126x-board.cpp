@@ -149,7 +149,9 @@ extern "C"
 				log_e("LORA Busy timeout waiting for BUSY low");
 #endif
 #ifdef NRF52_SERIES
+  #ifndef ARDUINO_ARCH_MBED
 				LOG_LV2("LORA", "[SX126xWaitOnBusy] Timeout waiting for BUSY low");
+  #endif
 #endif
 				return;
 			}

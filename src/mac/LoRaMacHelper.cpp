@@ -231,7 +231,9 @@ extern "C"
 		log_i("[FREQ] REGION_US915");
 #endif
 #ifdef NRF52_SERIES
+  #ifndef ARDUINO_ARCH_MBED
 		ADALOG("FREQ", "REGION_US915");
+  #endif
 #endif
 #elif defined(REGION_US915_HYBRID)
 		uint16_t subBandChannelMask[6] = {0x0000,
@@ -760,7 +762,9 @@ extern "C"
 			log_i("OTAA\n%s\nDevAdd=%08X\n%s\n%s", strlog1, DevAddr, strlog2, strlog3);
 #endif
 #ifdef NRF52_SERIES
+  #ifndef ARDUINO_ARCH_MBED
 			ADALOG("OTAA", "\n%s\nDevAdd=%08X\n%s\n%s", strlog1, DevAddr, strlog2, strlog3);
+  #endif
 #endif
 		}
 		else
@@ -782,7 +786,9 @@ extern "C"
 			log_i("ABP\n%s\nDevAdd=%08X\n%s\n%s", strlog1, DevAddr, strlog2, strlog3);
 #endif
 #ifdef NRF52_SERIES
+#ifndef ARDUINO_ARCH_MBED
 			ADALOG("ABP", "\n%s\nDevAdd=%08X\n%s\n%s", strlog1, DevAddr, strlog2, strlog3);
+#endif
 #endif
 		}
 
