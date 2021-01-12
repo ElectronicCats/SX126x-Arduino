@@ -11,6 +11,7 @@ Description: Generic lora driver implementation
 License: Revised BSD License, see LICENSE.TXT file include in the project
 
 Maintainer: Miguel Luis, Gregory Cristian and Wael Guibene
+Modified for NRF52840 Andrés Sabas @ Electronic Cats
 */
 
 /******************************************************************************
@@ -79,15 +80,11 @@ extern "C"
         int idx = obj->timerNum;
 		if (obj->oneShot)
 		{
-			//timerTickers[idx].once_ms(timerTimes[idx], obj->Callback);
-			//timeout.attach(mbed::callback(this, &Tone::stop), duration * 1ms);
-			timeoutTickers[idx].attach(mbed::callback(timerTimes[idx], obj->Callback), 1000);
+			timeoutTickers[idx].attach(obj->Callback, timerTimes[idx]);
 		}
 		else
 		{
-			//timerTickers[idx].attach_ms(timerTimes[idx], obj->Callback);
-			//ticker.attach(mbed::callback(this, &ServoImpl::call), 0.02f);
-			timerTickers[idx].attach(mbed::callback(timerTimes[idx], obj->Callback),1000);
+			timerTickers[idx].attach(obj->Callback, timerTimes[idx]);
 		}
 	}
 
@@ -103,13 +100,11 @@ extern "C"
 		timerTickers[idx].detach();
 		if (obj->oneShot)
 		{
-			//timerTickers[idx].once_ms(timerTimes[idx], obj->Callback);
-			timeoutTickers[idx].attach(mbed::callback(timerTimes[idx], obj->Callback), 1000);
+			timeoutTickers[idx].attach(obj->Callback, timerTimes[idx]);
 		}
 		else
 		{
-			//timerTickers[idx].attach_ms(timerTimes[idx], obj->Callback);
-			timerTickers[idx].attach(mbed::callback(timerTimes[idx], obj->Callback),1000);
+			timerTickers[idx].attach(obj->Callback, timerTimes[idx]);
 		}
 	}
 
