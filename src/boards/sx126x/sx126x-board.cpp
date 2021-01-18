@@ -40,6 +40,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 #include "boards/mcu/spi_board.h"
 #include "radio/sx126x/sx126x.h"
 #include "sx126x-board.h"
+#include <SPI.h>
 
 extern "C"
 {
@@ -84,7 +85,15 @@ extern "C"
 	void SX126xIoReInit(void)
 	{
 
-		initSPI();
+	  #ifdef ESP8266
+	    SPI.pins(_hwConfig.PIN_LORA_SCLK, _hwConfig.PIN_LORA_MISO, _hwConfig.PIN_LORA_MOSI, _hwConfig.PIN_LORA_NSS);
+	    SPI.begin();
+	    SPI.setHwCs(false);
+	  #elif ESP32
+	    SPI.begin(_hwConfig.PIN_LORA_SCLK, _hwConfig.PIN_LORA_MISO, _hwConfig.PIN_LORA_MOSI, _hwConfig.PIN_LORA_NSS);
+      #else
+	    SPI.begin();
+      #endif
 
 		dio3IsOutput = false;
 
