@@ -57,7 +57,7 @@ extern "C"
 	typedef enum
 	{
 		LMH_ERROR = -1,
-		LMH_SUCCESS = 1
+		LMH_SUCCESS = 0
 	} lmh_error_status;
 
 	typedef enum
