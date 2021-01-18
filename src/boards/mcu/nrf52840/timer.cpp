@@ -37,8 +37,11 @@ Modified for NRF52840 Andrés Sabas @ Electronic Cats
 #if defined(ARDUINO_ARCH_MBED)
 #include "boards/mcu/timer.h"
 #include "boards/mcu/board.h"
-#include "app_util.h"
+//#include "app_util.h"
 #include <mbed.h>
+
+using namespace std::chrono_literals;
+using namespace std::chrono;
 
 extern "C"
 {  
@@ -77,6 +80,7 @@ extern "C"
 
 	void TimerStart(TimerEvent_t *obj)
 	{
+
         int idx = obj->timerNum;
 		if (obj->oneShot)
 		{
