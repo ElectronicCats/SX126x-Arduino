@@ -666,12 +666,12 @@ typedef union
  */
 typedef struct SX126x_s
 {
-    Gpio_t        Reset;
-    Gpio_t        BUSY;
-    Gpio_t        DIO1;
-    Gpio_t        DIO2;
-    Gpio_t        DIO3;
-    Spi_t         Spi;
+    int        Reset;
+    int        BUSY;
+    int        DIO1;
+    int        DIO2;
+    int        DIO3;
+    int         Spi;
     PacketParams_t PacketParams;
     PacketStatus_t PacketStatus;
     ModulationParams_t ModulationParams;
