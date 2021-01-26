@@ -83,11 +83,11 @@ extern "C"
         int idx = obj->timerNum;
 		if (obj->oneShot)
 		{
-			timeoutTickers[idx].attach((mbed::callback(obj->Callback)), timerTimes[idx]);
+			timeoutTickers[idx].attach((mbed::callback(obj->Callback)), std::chrono::microseconds(timerTimes[idx]));
 		}
 		else
 		{
-			timerTickers[idx].attach((mbed::callback(obj->Callback)), timerTimes[idx]);
+			timerTickers[idx].attach((mbed::callback(obj->Callback)), std::chrono::microseconds(timerTimes[idx]));
 		}
 	}
 
@@ -103,11 +103,11 @@ extern "C"
 		timerTickers[idx].detach();
 		if (obj->oneShot)
 		{
-			timeoutTickers[idx].attach((mbed::callback(obj->Callback)), timerTimes[idx]);
+			timeoutTickers[idx].attach((mbed::callback(obj->Callback)), std::chrono::microseconds(timerTimes[idx]));
 		}
 		else
 		{
-			timerTickers[idx].attach((mbed::callback(obj->Callback)), timerTimes[idx]);
+			timerTickers[idx].attach((mbed::callback(obj->Callback)), std::chrono::microseconds(timerTimes[idx]));
 		}
 	}
 
