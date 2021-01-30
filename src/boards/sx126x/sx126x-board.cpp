@@ -163,6 +163,9 @@ extern "C"
 				LOG_LV2("LORA", "[SX126xWaitOnBusy] Timeout waiting for BUSY low");
   #endif
 #endif
+#ifdef ARDUINO_ARCH_MBED
+				Serial.println("LORA [SX126xWaitOnBusy] Timeout waiting for BUSY low");
+#endif
 				return;
 			}
 		}

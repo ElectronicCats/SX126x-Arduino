@@ -1,15 +1,36 @@
-#include <Arduino.h>
+/**
+   @file LoRaWAN_ABP.ino
+   @author Andres Sabas @ ElectronicCats
+   @brief LoRaWan node example with ABP registration
+   @version 0.1
+   @date 2021-01-12
 
-#include <LoRaWan-Arduino.h>
+*/
+#include <Arduino.h>
+#include <LoRaWan-Arduino.h> //http://librarymanager/All#SX126x
 #include <SPI.h>
 
-#define SCHED_MAX_EVENT_DATA_SIZE APP_TIMER_SCHED_EVENT_DATA_SIZE /**< Maximum size of scheduler events. */
-#define SCHED_QUEUE_SIZE 60										  /**< Maximum number of events in the scheduler queue. */
+// Define region REGION_US915, REGION_AS923, REGION_AU915,REGION_CN470, REGION_CN779,
+// REGION_EU433, REGION_IN865, REGION_EU868, REGION_KR920, REGION_US915_HYBRID
+#define REGION_US915
 
-#define LORAWAN_APP_DATA_BUFF_SIZE 64  /**< Size of the data to be transmitted. */
-#define LORAWAN_APP_TX_DUTYCYCLE 10000 /**< Defines the application data transmission duty cycle. 10s, value in [ms]. */
-#define APP_TX_DUTYCYCLE_RND 1000	  /**< Defines a random delay for application data transmission duty cycle. 1s, value in [ms]. */
-#define JOINREQ_NBTRIALS 3			   /**< Number of trials for the join request. */
+volatile bool flip = false;
+volatile bool flag = false;
+
+bool doOTAA = false;
+#define SCHED_MAX_EVENT_DATA_SIZE APP_TIMER_SCHED_EVENT_DATA_SIZE /**< Maximum size of scheduler events. */
+#define SCHED_QUEUE_SIZE 60                      /**< Maximum number of events in the scheduler queue. */
+
+#define LORAWAN_APP_DATA_BUFF_SIZE 64                     /**< buffer size of the data to be transmitted. */
+#define LORAWAN_APP_INTERVAL 2000000                        /**< Defines for user timer, the application data transmission interval. 20s, value in [us]. */
+
+#define LORAWAN_DATERATE DR_0                   /*LoRaMac datarates definition, from DR_0 to DR_5*/
+#define LORAWAN_TX_POWER TX_POWER_5                 /*LoRaMac tx power definition, from TX_POWER_0 to TX_POWER_15*/
+#define JOINREQ_NBTRIALS 3                      /**< Number of trials for the join request. */
+
+DeviceClass_t gCurrentClass = CLASS_A;                /* class definition*/
+lmh_confirm gCurrentConfirm = LMH_UNCONFIRMED_MSG;          /* confirm/unconfirm packet definition*/
+uint8_t gAppPort = LORAWAN_APP_PORT;                /* data port*/
 
 hw_config hwConfig;
 
@@ -37,7 +58,7 @@ int PIN_LORA_MOSI = MOSI; // LORA SPI MOSI
 int RADIO_TXEN = -1;	  // LORA ANTENNA TX ENABLE
 int RADIO_RXEN = -1;	  // LORA ANTENNA RX ENABLE
 #endif
-#ifdef NRF52_SERIES
+#ifdef NRF52840_XXAA
 // nRF52832 - SX126x pin configuration
 int PIN_LORA_RESET = 4;  // LORA RESET
 int PIN_LORA_NSS = 28;   // LORA SPI CS
@@ -51,286 +72,246 @@ int RADIO_RXEN = -1;	 // LORA ANTENNA RX ENABLE
 // Replace PIN_SPI_MISO, PIN_SPI_SCK, PIN_SPI_MOSI with your
 SPIClass SPI_LORA(NRF_SPIM2, 14, 12, 13);
 #endif
+#ifdef ARDUINO_ARCH_MBED
+// nRF52840 - SX126x pin configuration
+int PIN_LORA_RESET = RFM_RST;  // LORA RESET
+int PIN_LORA_DIO_1 = RFM_DIO1; // LORA DIO_1
+int PIN_LORA_BUSY = RFM_BUSY;  // LORA SPI BUSY
+int PIN_LORA_NSS = SS;   // LORA SPI CS
+int PIN_LORA_SCLK = SCK;  // LORA SPI CLK
+int PIN_LORA_MISO = MISO;  // LORA SPI MISO
+int PIN_LORA_MOSI = MOSI;  // LORA SPI MOSI
+int RADIO_TXEN = RFM_DIO2;   // LORA ANTENNA TX ENABLE
+int RADIO_RXEN = ANTSW;  // LORA ANTENNA RX ENABLE
+#endif
+
+/**@brief Structure containing LoRaWan parameters, needed for lmh_init()
+*/
+static lmh_param_t lora_param_init = {LORAWAN_ADR_ON, LORAWAN_DATERATE, LORAWAN_PUBLIC_NETWORK, JOINREQ_NBTRIALS, LORAWAN_TX_POWER, LORAWAN_DUTYCYCLE_OFF};
 
 // Foward declaration
 static void lorawan_has_joined_handler(void);
 static void lorawan_rx_handler(lmh_app_data_t *app_data);
 static void lorawan_confirm_class_handler(DeviceClass_t Class);
 static void send_lora_frame(void);
-static uint32_t timers_init(void);
-
-// APP_TIMER_DEF(lora_tx_timer_id);                                              ///< LoRa tranfer timer instance.
-TimerEvent_t appTimer;														  ///< LoRa tranfer timer instance.
-static uint8_t m_lora_app_data_buffer[LORAWAN_APP_DATA_BUFF_SIZE];			  ///< Lora user application data buffer.
-static lmh_app_data_t m_lora_app_data = {m_lora_app_data_buffer, 0, 0, 0, 0}; ///< Lora user application data structure.
-
-/**@brief Structure containing LoRaWan parameters, needed for lmh_init()
- */
-static lmh_param_t lora_param_init = {LORAWAN_ADR_ON, LORAWAN_DEFAULT_DATARATE, LORAWAN_PUBLIC_NETWORK, JOINREQ_NBTRIALS, LORAWAN_DEFAULT_TX_POWER, LORAWAN_DUTYCYCLE_OFF};
 
 /**@brief Structure containing LoRaWan callback functions, needed for lmh_init()
 */
 static lmh_callback_t lora_callbacks = {BoardGetBatteryLevel, BoardGetUniqueId, BoardGetRandomSeed,
-										lorawan_rx_handler, lorawan_has_joined_handler, lorawan_confirm_class_handler};
+                                        lorawan_rx_handler, lorawan_has_joined_handler, lorawan_confirm_class_handler
+                                       };
 
-#ifdef NRF52_SERIES
-// Start BLE if we compile for nRF52
-#include <bluefruit.h>
-void initBLE();
-extern bool bleUARTisConnected;
-extern BLEUart bleuart;
-#endif
+//ABP keys
+uint32_t nodeDevAddr = 0x11111111;
+uint8_t nodeNwsKey[16] = {0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11};
+uint8_t nodeAppsKey[16] = {0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11};
 
-// Check if the board has an LED port defined
-#ifndef LED_BUILTIN
-#ifdef ESP32
-#define LED_BUILTIN 2
-#endif
-#ifdef NRF52_SERIES
-#define LED_BUILTIN 17
-#endif
-#endif
 
-uint8_t nodeDeviceEUI[8] = {0x00, 0x95, 0x64, 0x1F, 0xDA, 0x91, 0x19, 0x0B};
+static uint8_t m_lora_app_data_buffer[LORAWAN_APP_DATA_BUFF_SIZE];        //< Lora user application data buffer.
+static lmh_app_data_t m_lora_app_data = {m_lora_app_data_buffer, 0, 0, 0, 0}; //< Lora user application data structure.
 
-uint8_t nodeAppEUI[8] = {0x70, 0xB3, 0xD5, 0x7E, 0xD0, 0x02, 0x01, 0xE1};
-
-uint8_t nodeAppKey[16] = {0x07, 0xC0, 0x82, 0x0C, 0x30, 0xB9, 0x08, 0x70, 0x0C, 0x0F, 0x70, 0x06, 0x00, 0xB0, 0xBE, 0x09};
-
-uint32_t nodeDevAddr = 0x260116F8;
-
-uint8_t nodeNwsKey[16] = {0x7E, 0xAC, 0xE2, 0x55, 0xB8, 0xA5, 0xE2, 0x69, 0x91, 0x51, 0x96, 0x06, 0x47, 0x56, 0x9D, 0x23};
-
-uint8_t nodeAppsKey[16] = {0xFB, 0xAC, 0xB6, 0x47, 0xF3, 0x58, 0x45, 0xC7, 0x50, 0x7D, 0xBF, 0x16, 0x8B, 0xA8, 0xC1, 0x7C};
+TimerEvent_t appTimer;
+static uint32_t timers_init(void);
+static uint32_t count = 0;
+static uint32_t count_fail = 0;
 
 void setup()
 {
-	pinMode(LED_BUILTIN, OUTPUT);
-	digitalWrite(LED_BUILTIN, LOW);
+  // Initialize Serial for debug output
+  Serial.begin(9600);
+  while (!Serial)
+  Serial.println("=====================================");
+  Serial.println("Welcome to Example with BastFrontier in LoRaWan!");
 
-	// Define the HW configuration between MCU and SX126x
-	hwConfig.CHIP_TYPE = SX1262_CHIP;		  // Example uses an eByte E22 module with an SX1262
-	hwConfig.PIN_LORA_RESET = PIN_LORA_RESET; // LORA RESET
-	hwConfig.PIN_LORA_NSS = PIN_LORA_NSS;	 // LORA SPI CS
-	hwConfig.PIN_LORA_SCLK = PIN_LORA_SCLK;   // LORA SPI CLK
-	hwConfig.PIN_LORA_MISO = PIN_LORA_MISO;   // LORA SPI MISO
-	hwConfig.PIN_LORA_DIO_1 = PIN_LORA_DIO_1; // LORA DIO_1
-	hwConfig.PIN_LORA_BUSY = PIN_LORA_BUSY;   // LORA SPI BUSY
-	hwConfig.PIN_LORA_MOSI = PIN_LORA_MOSI;   // LORA SPI MOSI
-	hwConfig.RADIO_TXEN = RADIO_TXEN;		  // LORA ANTENNA TX ENABLE
-	hwConfig.RADIO_RXEN = RADIO_RXEN;		  // LORA ANTENNA RX ENABLE
-	hwConfig.USE_DIO2_ANT_SWITCH = true;	  // Example uses an CircuitRocks Alora RFM1262 which uses DIO2 pins as antenna control
-	hwConfig.USE_DIO3_TCXO = true;			  // Example uses an CircuitRocks Alora RFM1262 which uses DIO3 to control oscillator voltage
-	hwConfig.USE_DIO3_ANT_SWITCH = false;	 // Only Insight ISP4520 module uses DIO3 as antenna control
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
 
-	// Initialize Serial for debug output
-	Serial.begin(115200);
+  // Define the HW configuration between MCU and SX126x
+  hwConfig.CHIP_TYPE = SX1262_CHIP;     // Example uses an eByte E22 module with an SX1262
+  hwConfig.PIN_LORA_RESET = PIN_LORA_RESET; // LORA RESET
+  hwConfig.PIN_LORA_NSS = PIN_LORA_NSS;  // LORA SPI CS
+  hwConfig.PIN_LORA_SCLK = PIN_LORA_SCLK;   // LORA SPI CLK
+  hwConfig.PIN_LORA_MISO = PIN_LORA_MISO;   // LORA SPI MISO
+  hwConfig.PIN_LORA_DIO_1 = PIN_LORA_DIO_1; // LORA DIO_1
+  hwConfig.PIN_LORA_BUSY = PIN_LORA_BUSY;   // LORA SPI BUSY
+  hwConfig.PIN_LORA_MOSI = PIN_LORA_MOSI;   // LORA SPI MOSI
+  hwConfig.RADIO_TXEN = RADIO_TXEN;     // LORA ANTENNA TX ENABLE
+  hwConfig.RADIO_RXEN = RADIO_RXEN;     // LORA ANTENNA RX ENABLE
+  hwConfig.USE_DIO2_ANT_SWITCH = true;    // Example uses an CircuitRocks Alora RFM1262 which uses DIO2 pins as antenna control
+  hwConfig.USE_DIO3_TCXO = true;        // Example uses an CircuitRocks Alora RFM1262 which uses DIO3 to control oscillator voltage
+  hwConfig.USE_DIO3_ANT_SWITCH = false;  // Only Insight ISP4520 module uses DIO3 as antenna control
+  hwConfig.USE_RXEN_ANT_PWR = true;
 
-	Serial.println("=====================================");
-	Serial.println("SX126x LoRaWan test");
-	Serial.println("=====================================");
-
-#ifdef NRF52_SERIES
-	pinMode(30, OUTPUT);
-	digitalWrite(30, HIGH);
-	// Start BLE if we compile for nRF52
-	initBLE();
+#if defined(REGION_AS923)
+  Serial.println("Region: AS923");
+#elif defined(REGION_AU915)
+  Serial.println("Region: AU915");
+#elif defined(REGION_CN470)
+  Serial.println("Region: CN470");
+#elif defined(REGION_CN779)
+  Serial.println("Region: CN779");
+#elif defined(REGION_EU433)
+  Serial.println("Region: EU433");
+#elif defined(REGION_IN865)
+  Serial.println("Region: IN865");
+#elif defined(REGION_EU868)
+  Serial.println("Region: EU868");
+#elif defined(REGION_KR920)
+  Serial.println("Region: KR920");
+#elif defined(REGION_US915)
+  Serial.println("Region: US915");
+#elif defined(REGION_US915_HYBRID)
+  Serial.println("Region: US915_HYBRID");
+#else
+  Serial.println("Please define a region in the compiler options.");
 #endif
+  Serial.println("=====================================");
 
-	// Initialize Scheduler and timer
-	uint32_t err_code = timers_init();
-	if (err_code != 0)
-	{
-		Serial.printf("timers_init failed - %d\n", err_code);
-	}
+  // Initialize LoRa chip.
+  if (!lora_hardware_init(hwConfig))
+  {
+    Serial.println("lora hardware init failed");
+    while (true);
+  }
 
-	// Initialize LoRa chip.
-	err_code = lora_hardware_init(hwConfig);
-	if (err_code != 0)
-	{
-		Serial.printf("lora_hardware_init failed - %d\n", err_code);
-	}
+  lmh_setNwkSKey(nodeNwsKey);
+  lmh_setAppSKey(nodeAppsKey);
+  lmh_setDevAddr(nodeDevAddr);
 
-	// Setup the EUIs and Keys
-	lmh_setDevEui(nodeDeviceEUI);
-	lmh_setAppEui(nodeAppEUI);
-	lmh_setAppKey(nodeAppKey);
-	lmh_setNwkSKey(nodeNwsKey);
-	lmh_setAppSKey(nodeAppsKey);
-	lmh_setDevAddr(nodeDevAddr);
+  // Initialize LoRaWan
+  if (lmh_init(&lora_callbacks, lora_param_init, doOTAA))
+  {
+    Serial.println("lmh_init failed");
+    while (true);
+  }
 
-	// Initialize LoRaWan
-	err_code = lmh_init(&lora_callbacks, lora_param_init, false);
-	if (err_code != 0)
-	{
-		Serial.printf("lmh_init failed - %d\n", err_code);
-	}
+  Serial.println("LoRaWAN ABP!!");
+  Serial.println("=====================================");
 
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// Use either
-	// lmh_setSingleChannelGateway
-	// or
-	// lmh_setSubBandChannels
-	//
-	// DO NOT USE BOTH OR YOUR COMMUNICATION WILL MOST LIKELY NEVER WORK
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// Setup connection to a single channel gateway
-	// lmh_setSingleChannelGateway(0, DR_3);
-
-	// For some regions we might need to define the sub band the gateway is listening to
-	// This must be called AFTER lmh_init()
-	/// \todo This is for Dragino LPS8 gateway. How about other gateways???
-	if (!lmh_setSubBandChannels(1))
-	{
-		Serial.println("lmh_setSubBandChannels failed. Wrong sub band requested?");
-	}
-
-	// Start Join procedure
-	lmh_join();
+  timers_init();
+  
+  // Start Join procedure
+  lmh_join();
 }
 
 void loop()
 {
-	// Handle Radio events
-	Radio.IrqProcess();
+  if (flag == true) {
+    flip = !flip;
+    digitalWrite(LED_BUILTIN, flip);
+    Serial.println("send_lora_frame");
+    if (lmh_join_status_get() != LMH_SET)
+    {
+      //Not joined, try again later
+      return;
+    }
 
-	// We are on FreeRTOS, give other tasks a chance to run
-	// delay(100);
+    uint32_t i = 0;
+    memset(m_lora_app_data.buffer, 0, LORAWAN_APP_DATA_BUFF_SIZE);
+    m_lora_app_data.port = gAppPort;
+    m_lora_app_data.buffer[i++] = 'H';
+    m_lora_app_data.buffer[i++] = 'e';
+    m_lora_app_data.buffer[i++] = 'l';
+    m_lora_app_data.buffer[i++] = 'l';
+    m_lora_app_data.buffer[i++] = 'o';
+    m_lora_app_data.buffer[i++] = '!';
+    m_lora_app_data.buffsize = i;
+
+    lmh_error_status error = lmh_send(&m_lora_app_data, LMH_UNCONFIRMED_MSG);
+    Serial.print("Error Send: ");
+    Serial.println(error);
+    
+    if (error == LMH_SUCCESS)
+    {
+      count++;
+      Serial.print("lmh_send ok count: ");
+      Serial.println(count);
+    }
+    else
+    {
+      count_fail++;
+      Serial.print("lmh_send fail count: ");
+      Serial.println(count_fail);
+    }
+    
+    flag = false;
+  }
+
+  // Handle Radio events
+  Radio.IrqProcess();
 }
 
 /**@brief LoRa function for handling HasJoined event.
- */
-static void lorawan_has_joined_handler(void)
+*/
+void lorawan_has_joined_handler(void)
 {
-#if (OVER_THE_AIR_ACTIVATION != 0)
-	Serial.println("Network Joined");
-#else
-	Serial.println("OVER_THE_AIR_ACTIVATION != 0");
+  Serial.println("ABP Mode Join!");
 
-#endif
-	lmh_class_request(CLASS_A);
-
-	TimerSetValue(&appTimer, LORAWAN_APP_TX_DUTYCYCLE);
-	TimerStart(&appTimer);
-	// app_timer_start(lora_tx_timer_id, APP_TIMER_TICKS(LORAWAN_APP_TX_DUTYCYCLE), NULL);
+  lmh_error_status ret = lmh_class_request(gCurrentClass);
+  Serial.print("lmh_error_status!");
+  Serial.println(ret);
+  
+  if (ret == LMH_SUCCESS)
+  {
+    delay(1000);
+    TimerSetValue(&appTimer, LORAWAN_APP_INTERVAL);
+    TimerStart(&appTimer);
+  }
 }
 
 /**@brief Function for handling LoRaWan received data from Gateway
- *
- * @param[in] app_data  Pointer to rx data
- */
-static void lorawan_rx_handler(lmh_app_data_t *app_data)
+
+   @param[in] app_data  Pointer to rx data
+*/
+void lorawan_rx_handler(lmh_app_data_t *app_data)
 {
-	Serial.printf("LoRa Packet received on port %d, size:%d, rssi:%d, snr:%d\n",
-				  app_data->port, app_data->buffsize, app_data->rssi, app_data->snr);
-
-	switch (app_data->port)
-	{
-	case 3:
-		// Port 3 switches the class
-		if (app_data->buffsize == 1)
-		{
-			switch (app_data->buffer[0])
-			{
-			case 0:
-				lmh_class_request(CLASS_A);
-				break;
-
-			case 1:
-				lmh_class_request(CLASS_B);
-				break;
-
-			case 2:
-				lmh_class_request(CLASS_C);
-				break;
-
-			default:
-				break;
-			}
-		}
-		break;
-
-	case LORAWAN_APP_PORT:
-		// YOUR_JOB: Take action on received data
-		break;
-
-	default:
-		break;
-	}
+  
+  Serial.println("lorawan_rx_handler");
+  /*Serial.print("LoRa Packet received on port: ");
+  Serial.println(app_data->port);
+  Serial.print("LoRa Packet received on size:: ");
+  Serial.println(app_data->buffsize);
+  Serial.print("LoRa Packet received on rssi: ");
+  Serial.println(app_data->rssi);
+  Serial.print("LoRa Packet received on snr: ");
+  Serial.println(app_data->snr);
+  Serial.print("LoRa Packet received on data: ");
+  */
+  //Serial.println(app_data->buffer);
 }
 
-static void lorawan_confirm_class_handler(DeviceClass_t Class)
+void lorawan_confirm_class_handler(DeviceClass_t Class)
 {
-	Serial.printf("switch to class %c done\n", "ABC"[Class]);
-
-	// Informs the server that switch has occurred ASAP
-	m_lora_app_data.buffsize = 0;
-	m_lora_app_data.port = LORAWAN_APP_PORT;
-	lmh_send(&m_lora_app_data, LMH_UNCONFIRMED_MSG);
+  Serial.println("lorawan_confirm_class_handler");
+  Serial.print("switch to class ");
+  Serial.println(Class);
+  
+  // Informs the server that switch has occurred ASAP
+  m_lora_app_data.buffsize = 0;
+  m_lora_app_data.port = gAppPort;
+  lmh_send(&m_lora_app_data, gCurrentConfirm);
 }
 
-static void send_lora_frame(void)
+void send_lora_frame(void)
 {
-	if (lmh_join_status_get() != LMH_SET)
-	{
-		//Not joined, try again later
-		Serial.println("Did not join network, skip sending frame");
-		return;
-	}
-
-	uint32_t i = 0;
-	m_lora_app_data.port = LORAWAN_APP_PORT;
-	m_lora_app_data.buffer[i++] = 'H';
-	m_lora_app_data.buffer[i++] = 'e';
-	m_lora_app_data.buffer[i++] = 'l';
-	m_lora_app_data.buffer[i++] = 'l';
-	m_lora_app_data.buffer[i++] = 'o';
-	m_lora_app_data.buffer[i++] = ' ';
-	m_lora_app_data.buffer[i++] = 'w';
-	m_lora_app_data.buffer[i++] = 'o';
-	m_lora_app_data.buffer[i++] = 'r';
-	m_lora_app_data.buffer[i++] = 'l';
-	m_lora_app_data.buffer[i++] = 'd';
-	m_lora_app_data.buffer[i++] = '!';
-	m_lora_app_data.buffsize = i;
-
-	lmh_error_status error = lmh_send(&m_lora_app_data, LMH_UNCONFIRMED_MSG);
-	if (error == LMH_SUCCESS)
-	{
-	}
-	Serial.printf("lmh_send result %d\n", error);
+  flag = true;
 }
 
-/**@brief Function for handling a LoRa tx timer timeout event.
- */
-static void tx_lora_periodic_handler(void)
+/**@brief Function for handling user timerout event.
+*/
+void tx_lora_periodic_handler(void)
 {
-	TimerSetValue(&appTimer, LORAWAN_APP_TX_DUTYCYCLE);
-	TimerStart(&appTimer);
-	Serial.println("Sending frame");
-	send_lora_frame();
+  TimerSetValue(&appTimer, LORAWAN_APP_INTERVAL);
+  TimerStart(&appTimer);
+  send_lora_frame();
 }
 
 /**@brief Function for the Timer initialization.
- *
- * @details Initializes the timer module. This creates and starts application timers.
- */
-static uint32_t timers_init(void)
+
+   @details Initializes the timer module. This creates and starts application timers.
+*/
+uint32_t timers_init(void)
 {
-	appTimer.timerNum = 3;
-	TimerInit(&appTimer, tx_lora_periodic_handler);
-
-	// ret_code_t err_code;
-
-	// APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
-
-	// // Initialize timer module.
-	// err_code = app_timer_init();
-	// VERIFY_SUCCESS(err_code);
-
-	// // Initialize timers
-	// err_code = app_timer_create(&lora_tx_timer_id, APP_TIMER_MODE_REPEATED, tx_lora_periodic_handler);
-	// VERIFY_SUCCESS(err_code);
-
-	return 0;
+  appTimer.timerNum = 3;
+  TimerInit(&appTimer, tx_lora_periodic_handler);
 }
