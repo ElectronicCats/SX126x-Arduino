@@ -41,8 +41,8 @@
 extern "C"
 {
 #endif
-
-#include "systime.h"
+//TODO
+//#include "systime.h"
 #include "LoRaMacTypes.h"
 
 /*!
