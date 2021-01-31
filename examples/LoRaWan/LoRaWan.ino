@@ -97,7 +97,7 @@ static uint8_t m_lora_app_data_buffer[LORAWAN_APP_DATA_BUFF_SIZE];        //< Lo
 static lmh_app_data_t m_lora_app_data = {m_lora_app_data_buffer, 0, 0, 0, 0}; //< Lora user application data structure.
 
 TimerEvent_t appTimer;
-static uint32_t timers_init(void);
+static void timers_init(void);
 static uint32_t count = 0;
 static uint32_t count_fail = 0;
 
@@ -296,7 +296,7 @@ void tx_lora_periodic_handler(void)
 
    @details Initializes the timer module. This creates and starts application timers.
 */
-uint32_t timers_init(void)
+void timers_init(void)
 {
   appTimer.timerNum = 3;
   TimerInit(&appTimer, tx_lora_periodic_handler);
