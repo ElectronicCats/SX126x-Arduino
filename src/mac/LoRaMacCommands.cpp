@@ -19,7 +19,7 @@ Maintainer: Miguel Luis ( Semtech ), Daniel Jaeckle ( STACKFORCE ), Johannes Bru
 */
 #include <stddef.h>
 
-#include "utilities.h"
+#include "system/utilities.h"
 #include "LoRaMacCommands.h"
 #include "LoRaMacConfirmQueue.h"
 

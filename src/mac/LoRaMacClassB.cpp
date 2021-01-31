@@ -18,7 +18,7 @@ License: Revised BSD License, see LICENSE.TXT file include in the project
 Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jaeckle ( STACKFORCE )
 */
 #include <math.h>
-#include "utilities.h"
+#include "system/utilities.h"
 #include "secure-element.h"
 #include "LoRaMac.h"
 #include "LoRaMacClassB.h"

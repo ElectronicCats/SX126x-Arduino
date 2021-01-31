@@ -19,7 +19,7 @@ Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ),
             Daniel Jaeckle ( STACKFORCE ),  Johannes Bruder ( STACKFORCE )
 */
 #include "LoRaMacSerializer.h"
-#include "utilities.h"
+#include "system/utilities.h"
 
 LoRaMacSerializerStatus_t LoRaMacSerializerJoinRequest( LoRaMacMessageJoinRequest_t* macMsg )
 {

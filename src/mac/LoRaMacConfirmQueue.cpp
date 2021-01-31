@@ -22,7 +22,7 @@ Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jae
 #include <stddef.h>
 
 #include "timer.h"
-#include "utilities.h"
+#include "system/utilities.h"
 #include "LoRaMac.h"
 #include "LoRaMacConfirmQueue.h"
 
