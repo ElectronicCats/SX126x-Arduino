@@ -29,19 +29,17 @@ int PIN_LORA_MOSI = 13;  // LORA SPI MOSI
 int RADIO_TXEN = -1;	 // LORA ANTENNA TX ENABLE
 int RADIO_RXEN = -1;		 // LORA ANTENNA RX ENABLE
 #endif
-#ifdef NRF52_SERIES
-// nRF52832 - SX126x pin configuration
-int PIN_LORA_RESET = 4;  // LORA RESET
-int PIN_LORA_DIO_1 = 11; // LORA DIO_1
-int PIN_LORA_BUSY = 29;  // LORA SPI BUSY
-int PIN_LORA_NSS = 28;   // LORA SPI CS
-int PIN_LORA_SCLK = 12;  // LORA SPI CLK
-int PIN_LORA_MISO = 14;  // LORA SPI MISO
-int PIN_LORA_MOSI = 13;  // LORA SPI MOSI
-int RADIO_TXEN = -1;	 // LORA ANTENNA TX ENABLE
-int RADIO_RXEN = -1;	 // LORA ANTENNA RX ENABLE
-// Replace PIN_SPI_MISO, PIN_SPI_SCK, PIN_SPI_MOSI with your
-SPIClass SPI_LORA(NRF_SPIM2, 14, 12, 13);
+#ifdef ARDUINO_ARCH_NRF52840
+// nRF52840 - SX126x pin configuration
+int PIN_LORA_RESET = RFM_RST;  // LORA RESET
+int PIN_LORA_DIO_1 = RFM_DIO1; // LORA DIO_1
+int PIN_LORA_BUSY = RFM_BUSY;  // LORA SPI BUSY
+int PIN_LORA_NSS = SS;   // LORA SPI CS
+int PIN_LORA_SCLK = SCK;  // LORA SPI CLK
+int PIN_LORA_MISO = MISO;  // LORA SPI MISO
+int PIN_LORA_MOSI = MOSI;  // LORA SPI MOSI
+int RADIO_TXEN = RFM_DIO2;   // LORA ANTENNA TX ENABLE
+int RADIO_RXEN = ANTSW;  // LORA ANTENNA RX ENABLE
 #endif
 
 // Function declarations
@@ -51,27 +49,9 @@ void OnTxTimeout(void);
 void OnRxTimeout(void);
 void OnRxError(void);
 void OnCadDone(bool cadResult);
-#ifdef NRF52_SERIES
-// Start BLE if we compile for nRF52
-#include <bluefruit.h>
-void initBLE();
-extern bool bleUARTisConnected;
-extern BLEUart bleuart;
-#endif
-
-// Check if the board has an LED port defined
-#ifdef ESP32
-#define LED_BUILTIN 2
-#endif
-#ifdef ESP8266
-#define LED_BUILTIN 2
-#endif
-#ifdef NRF52_SERIES
-#define LED_BUILTIN 17
-#endif
 
 // Define LoRa parameters
-#define RF_FREQUENCY 868000000  // Hz
+#define RF_FREQUENCY 915000000  // Hz
 #define TX_OUTPUT_POWER 22		// dBm
 #define LORA_BANDWIDTH 0		// [0: 125 kHz, 1: 250 kHz, 2: 500 kHz, 3: Reserved]
 #define LORA_SPREADING_FACTOR 7 // [SF7..SF12]
@@ -121,42 +101,15 @@ void setup()
 	hwConfig.USE_DIO3_ANT_SWITCH = false;	 // Only Insight ISP4520 module uses DIO3 as antenna control
 
 	// Initialize Serial for debug output
-	Serial.begin(115200);
+	Serial.begin(9600);
+  Serial.println("LoRa PingPong");
 
-	Serial.println("=====================================");
-	Serial.println("SX126x PingPong test");
-	Serial.println("=====================================");
-
-#ifdef NRF52_SERIES
-	Serial.println("MCU Nordic nRF52832");
-	pinMode(30, OUTPUT);
-	digitalWrite(30, HIGH);
-	// Start BLE if we compile for nRF52
-	initBLE();
-#endif
-#ifdef ESP32
-	Serial.println("MCU Espressif ESP32");
-#endif
-#ifdef ESP8266
-	Serial.println("MCU Espressif ESP8266");
-#endif
-
-	uint8_t deviceId[8];
-
-	BoardGetUniqueId(deviceId);
-	Serial.printf("BoardId: %02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X\n",
-				  deviceId[7],
-				  deviceId[6],
-				  deviceId[5],
-				  deviceId[4],
-				  deviceId[3],
-				  deviceId[2],
-				  deviceId[1],
-				  deviceId[0]);
-
-	// Initialize the LoRa chip
-	Serial.println("Starting lora_hardware_init");
-	lora_hardware_init(hwConfig);
+  // Initialize the LoRa chip
+    if (!lora_hardware_init(hwConfig))
+  {
+    Serial.println("Starting LoRa failed!");
+    while (1);
+  }
 
 	// Initialize the Radio callbacks
 	RadioEvents.TxDone = OnTxDone;
@@ -206,12 +159,6 @@ void loop()
 void OnTxDone(void)
 {
 	Serial.println("OnTxDone");
-#ifdef NRF52_SERIES
-	if (bleUARTisConnected)
-	{
-		bleuart.print("OnTxDone\n");
-	}
-#endif
 	Radio.Rx(RX_TIMEOUT_VALUE);
 }
 
@@ -220,12 +167,6 @@ void OnTxDone(void)
 void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr)
 {
 	Serial.println("OnRxDone");
-#ifdef NRF52_SERIES
-	if (bleUARTisConnected)
-	{
-		bleuart.print("OnRxDone\n");
-	}
-#endif
 	delay(10);
 	BufferSize = size;
 	memcpy(RcvBuffer, payload, BufferSize);
@@ -237,13 +178,6 @@ void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr)
 		Serial.printf("%02X ", RcvBuffer[idx]);
 	}
 	Serial.println("");
-
-#ifdef NRF52_SERIES
-	if (bleUARTisConnected)
-	{
-		bleuart.printf("RssiValue=%d dBm, SnrValue=%d\n", rssi, snr);
-	}
-#endif
 	digitalWrite(LED_BUILTIN, HIGH);
 
 	if (isMaster == true)
@@ -253,12 +187,6 @@ void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr)
 			if (strncmp((const char *)RcvBuffer, (const char *)PongMsg, 4) == 0)
 			{
 				Serial.println("Received a PONG in OnRxDone as Master");
-#ifdef NRF52_SERIES
-				if (bleUARTisConnected)
-				{
-					bleuart.print("Received a PONG in OnRxDone as Master\n");
-				}
-#endif
 
 				// Wait 500ms before sending the next package
 				delay(500);
@@ -273,12 +201,6 @@ void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr)
 			else if (strncmp((const char *)RcvBuffer, (const char *)PingMsg, 4) == 0)
 			{ // A master already exists then become a slave
 				Serial.println("Received a PING in OnRxDone as Master");
-#ifdef NRF52_SERIES
-				if (bleUARTisConnected)
-				{
-					bleuart.print("Received a PING in OnRxDone as Master\n");
-				}
-#endif
 				isMaster = false;
 				Radio.Rx(RX_TIMEOUT_VALUE);
 			}
@@ -296,12 +218,6 @@ void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr)
 			if (strncmp((const char *)RcvBuffer, (const char *)PingMsg, 4) == 0)
 			{
 				Serial.println("Received a PING in OnRxDone as Slave");
-#ifdef NRF52_SERIES
-				if (bleUARTisConnected)
-				{
-					bleuart.print("Received a PING in OnRxDone as Slave\n");
-				}
-#endif
 
 				// Check if our channel is available for sending
 				Radio.Standby();
@@ -313,12 +229,6 @@ void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr)
 			else // valid reception but not a PING as expected
 			{	// Set device as master and start again
 				Serial.println("Received something in OnRxDone as Slave");
-#ifdef NRF52_SERIES
-				if (bleUARTisConnected)
-				{
-					bleuart.print("Received something in OnRxDone as Slave\n");
-				}
-#endif
 				isMaster = true;
 				Radio.Rx(RX_TIMEOUT_VALUE);
 			}
@@ -332,12 +242,6 @@ void OnTxTimeout(void)
 {
 	// Radio.Sleep();
 	Serial.println("OnTxTimeout");
-#ifdef NRF52_SERIES
-	if (bleUARTisConnected)
-	{
-		bleuart.print("OnTxTimeout\n");
-	}
-#endif
 	digitalWrite(LED_BUILTIN, LOW);
 
 	Radio.Rx(RX_TIMEOUT_VALUE);
@@ -348,12 +252,6 @@ void OnTxTimeout(void)
 void OnRxTimeout(void)
 {
 	Serial.println("OnRxTimeout");
-#ifdef NRF52_SERIES
-	if (bleUARTisConnected)
-	{
-		bleuart.print("OnRxTimeout\n");
-	}
-#endif
 
 	digitalWrite(LED_BUILTIN, LOW);
 
@@ -387,12 +285,6 @@ void OnRxTimeout(void)
 void OnRxError(void)
 {
 	Serial.println("OnRxError");
-#ifdef NRF52_SERIES
-	if (bleUARTisConnected)
-	{
-		bleuart.print("OnRxError\n");
-	}
-#endif
 	digitalWrite(LED_BUILTIN, LOW);
 
 	if (isMaster == true)
@@ -421,32 +313,14 @@ void OnCadDone(bool cadResult)
 	if (cadResult)
 	{
 		Serial.printf("CAD returned channel busy after %ldms\n", duration);
-#ifdef NRF52_SERIES
-		if (bleUARTisConnected)
-		{
-			bleuart.printf("CAD returned channel busy after %ldms\n", duration);
-		}
-#endif
 		Radio.Rx(RX_TIMEOUT_VALUE);
 	}
 	else
 	{
 		Serial.printf("CAD returned channel free after %ldms\n", duration);
-#ifdef NRF52_SERIES
-		if (bleUARTisConnected)
-		{
-			bleuart.printf("CAD returned channel free after %ldms\n", duration);
-		}
-#endif
 		if (isMaster)
 		{
 			Serial.println("Sending a PING in OnCadDone as Master");
-#ifdef NRF52_SERIES
-			if (bleUARTisConnected)
-			{
-				bleuart.print("Sending a PING in OnCadDone as Master\n");
-			}
-#endif
 			// Send the next PING frame
 			TxdBuffer[0] = 'P';
 			TxdBuffer[1] = 'I';
@@ -456,12 +330,6 @@ void OnCadDone(bool cadResult)
 		else
 		{
 			Serial.println("Sending a PONG in OnCadDone as Slave");
-#ifdef NRF52_SERIES
-			if (bleUARTisConnected)
-			{
-				bleuart.print("Sending a PONG in OnCadDone as Slave\n");
-			}
-#endif
 			// Send the reply to the PONG string
 			TxdBuffer[0] = 'P';
 			TxdBuffer[1] = 'O';
