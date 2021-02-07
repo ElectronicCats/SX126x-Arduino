@@ -22,7 +22,7 @@ bool doOTAA = false;
 #define SCHED_QUEUE_SIZE 60                      /**< Maximum number of events in the scheduler queue. */
 
 #define LORAWAN_APP_DATA_BUFF_SIZE 64                     /**< buffer size of the data to be transmitted. */
-#define LORAWAN_APP_INTERVAL 2000000                        /**< Defines for user timer, the application data transmission interval. 20s, value in [us]. */
+#define LORAWAN_APP_INTERVAL 10000000                        /**< Defines for user timer, the application data transmission interval. 20s, value in [us]. */
 
 #define LORAWAN_DATERATE DR_0                   /*LoRaMac datarates definition, from DR_0 to DR_5*/
 #define LORAWAN_TX_POWER TX_POWER_5                 /*LoRaMac tx power definition, from TX_POWER_0 to TX_POWER_15*/
@@ -204,9 +204,6 @@ void loop()
     m_lora_app_data.buffsize = i;
 
     lmh_error_status error = lmh_send(&m_lora_app_data, LMH_UNCONFIRMED_MSG);
-    Serial.print("Error Send: ");
-    Serial.println(error);
-    
     if (error == LMH_SUCCESS)
     {
       count++;
