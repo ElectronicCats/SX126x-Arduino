@@ -555,7 +555,11 @@ extern "C"
 						LoRaMacTestSetDutyCycleOn(false);
 
 						TimerInit(&ComplianceTestTxNextPacketTimer, OnComplianceTestTxNextPacketTimerEvent);
-						TimerSetValue(&ComplianceTestTxNextPacketTimer, 5000*1000);
+						#if defined(ARDUINO_ARCH_MBED)
+						TimerSetValue(&ComplianceTestTxNextPacketTimer, 5000000);
+						#else
+						TimerSetValue(&ComplianceTestTxNextPacketTimer, 5000);
+						#endif
 
 						// confirm test mode activation
 						compliance_test_tx();

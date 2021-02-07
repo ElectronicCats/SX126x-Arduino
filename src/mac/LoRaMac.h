@@ -47,7 +47,11 @@ extern "C"
 /*!
  * Check the Mac layer state every MAC_STATE_CHECK_TIMEOUT in ms
  */
+#if defined(ARDUINO_ARCH_MBED)
 #define MAC_STATE_CHECK_TIMEOUT 1000000
+#else
+#define MAC_STATE_CHECK_TIMEOUT 1000
+#endif
 
 /*!
  * Maximum number of times the MAC layer tries to get an acknowledge.
