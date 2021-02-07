@@ -1,4 +1,5 @@
 # SX126x-Arduino 
+![LibraryBuild](https://github.com/ElectronicCats/SX126x-Arduino/workflows/LibraryBuild/badge.svg)
 
 Arduino library for LoRa communication with Semtech SX126x chips. It is based on Semtech's SX126x libraries and adapted to the Arduino framework for ESP32, ESP8266 and nRF52832. It will not work with other uC's like AVR.    
 
