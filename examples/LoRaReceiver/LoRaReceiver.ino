@@ -1,5 +1,4 @@
-#include <Arduino.h>
-#include <SX126x-Arduino.h>  //http://librarymanager/All#SX126x
+#include <LoRaWan-SX126x.h>  //http://librarymanager/All#SX126x
 #include <SPI.h>
 
 hw_config hwConfig;
