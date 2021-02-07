@@ -3,32 +3,7 @@
 
 hw_config hwConfig;
 
-#ifdef ESP32
-// ESP32 - SX126x pin configuration
-int PIN_LORA_RESET = 4;  // LORA RESET
-int PIN_LORA_DIO_1 = 21; // LORA DIO_1
-int PIN_LORA_BUSY = 22;  // LORA SPI BUSY
-int PIN_LORA_NSS = 5;	// LORA SPI CS
-int PIN_LORA_SCLK = 18;  // LORA SPI CLK
-int PIN_LORA_MISO = 19;  // LORA SPI MISO
-int PIN_LORA_MOSI = 23;  // LORA SPI MOSI
-int RADIO_TXEN = -1;	 // LORA ANTENNA TX ENABLE
-int RADIO_RXEN = -1;	 // LORA ANTENNA RX ENABLE
-#endif
-#ifdef ESP8266
-// ESP32 - SX126x pin configuration
-int PIN_LORA_RESET = 0; // LORA RESET
-int PIN_LORA_DIO_1 = 15;  // LORA DIO_1
-int PIN_LORA_BUSY = 16;   // LORA SPI BUSY
-int PIN_LORA_NSS = 2;   // LORA SPI CS
-int PIN_LORA_SCLK = 14;  // LORA SPI CLK
-int PIN_LORA_MISO = 12;  // LORA SPI MISO
-int PIN_LORA_MOSI = 13;  // LORA SPI MOSI
-int RADIO_TXEN = -1;	 // LORA ANTENNA TX ENABLE
-int RADIO_RXEN = -1;		 // LORA ANTENNA RX ENABLE
-#endif
-#ifdef ARDUINO_ARCH_NRF52840
-// nRF52840 - SX126x pin configuration
+// Microcontroller - SX126x pin configuration
 int PIN_LORA_RESET = 10;  // LORA RESET
 int PIN_LORA_DIO_1 = 9; // LORA DIO_1
 int PIN_LORA_BUSY = 8;  // LORA SPI BUSY
@@ -38,7 +13,6 @@ int PIN_LORA_MISO = MISO;  // LORA SPI MISO
 int PIN_LORA_MOSI = MOSI;  // LORA SPI MOSI
 int RADIO_TXEN = 4;   // LORA ANTENNA TX ENABLE
 int RADIO_RXEN = 3;  // LORA ANTENNA RX ENABLE
-#endif
 
 // Function declarations
 void OnTxDone(void);
