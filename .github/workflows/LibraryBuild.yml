@@ -35,6 +35,7 @@ jobs:
           - arduino:mbed:nano33ble
           - esp8266:esp8266:huzzah:eesz=4M3M,xtal=80
           - esp32:esp32:featheresp32:FlashFreq=80
+          - raknrf:nrf52:WisCoreRAK4631Board
 
         # Specify parameters for each board.
         # Parameters can be: platform-url, sketches-exclude and examples-build-properties
@@ -48,6 +49,9 @@ jobs:
             
           - arduino-boards-fqbn: esp32:esp32:featheresp32:FlashFreq=80
             platform-url: https://dl.espressif.com/dl/package_esp32_index.json
+
+          - arduino-boards-fqbn: raknrf:nrf52:WisCoreRAK4631Board
+            platform-url: https://downloads.rakwireless.com/Arduino/BSP/package_raknrf_index.json
 
       # Do not cancel all jobs / architectures if one job fails
       fail-fast: false
