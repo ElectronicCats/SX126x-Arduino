@@ -7,7 +7,7 @@
 
 */
 #include <Arduino.h>
-#include <LoRaWan-Arduino.h> //http://librarymanager/All#SX126x
+#include <LoRaWan-SX126x.h> //http://librarymanager/All#SX126x
 #include <SPI.h>
 
 // Define region REGION_US915, REGION_AS923, REGION_AU915,REGION_CN470, REGION_CN779,
