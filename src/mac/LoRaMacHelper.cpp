@@ -555,7 +555,7 @@ extern "C"
 						LoRaMacTestSetDutyCycleOn(false);
 
 						TimerInit(&ComplianceTestTxNextPacketTimer, OnComplianceTestTxNextPacketTimerEvent);
-						TimerSetValue(&ComplianceTestTxNextPacketTimer, 5000);
+						TimerSetValue(&ComplianceTestTxNextPacketTimer, 5000*1000);
 
 						// confirm test mode activation
 						compliance_test_tx();

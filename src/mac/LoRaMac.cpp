@@ -619,15 +619,15 @@ extern "C"
 		// Setup timers
 		if (IsRxWindowsEnabled == true)
 		{
-			TimerSetValue(&RxWindowTimer1, RxWindow1Delay);
+			TimerSetValue(&RxWindowTimer1, RxWindow1Delay*1000);
 			TimerStart(&RxWindowTimer1);
-			TimerSetValue(&RxWindowTimer2, RxWindow2Delay);
+			TimerSetValue(&RxWindowTimer2, RxWindow2Delay*1000);
 			TimerStart(&RxWindowTimer2);
 			if ((LoRaMacDeviceClass == CLASS_C) || (NodeAckRequested == true))
 			{
 				getPhy.Attribute = PHY_ACK_TIMEOUT;
 				phyParam = RegionGetPhyParam(LoRaMacRegion, &getPhy);
-				TimerSetValue(&AckTimeoutTimer, RxWindow2Delay + phyParam.Value);
+				TimerSetValue(&AckTimeoutTimer, (RxWindow2Delay + phyParam.Value)*1000);
 				TimerStart(&AckTimeoutTimer);
 			}
 		}
@@ -683,7 +683,7 @@ extern "C"
 		LoRaMacFlags.Bits.MacDone = 1;
 
 		// Trig OnMacCheckTimerEvent call as soon as possible
-		TimerSetValue(&MacStateCheckTimer, 1);
+		TimerSetValue(&MacStateCheckTimer, 1*1000);
 		TimerStart(&MacStateCheckTimer);
 	}
 
@@ -1102,7 +1102,7 @@ extern "C"
 		LoRaMacFlags.Bits.MacDone = 1;
 
 		// Trig OnMacCheckTimerEvent call as soon as possible
-		TimerSetValue(&MacStateCheckTimer, 1);
+		TimerSetValue(&MacStateCheckTimer, 1*1000);
 		TimerStart(&MacStateCheckTimer);
 	}
 
@@ -1966,7 +1966,7 @@ extern "C"
 		{
 			// Send later - prepare timer
 			LoRaMacState |= LORAMAC_TX_DELAYED;
-			TimerSetValue(&TxDelayedTimer, dutyCycleTimeOff);
+			TimerSetValue(&TxDelayedTimer, dutyCycleTimeOff*1000);
 			TimerStart(&TxDelayedTimer);
 
 			return LORAMAC_STATUS_OK;

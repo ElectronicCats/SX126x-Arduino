@@ -95,18 +95,22 @@ extern "C"
 	{
 		int idx = obj->timerNum;
 		timerTickers[idx].detach();
+		timeoutTickers[idx].detach();
 	}
 
 	void TimerReset(TimerEvent_t *obj)
 	{
 		int idx = obj->timerNum;
 		timerTickers[idx].detach();
+		timeoutTickers[idx].detach();
 		if (obj->oneShot)
 		{
+			//timeoutTickers[idx].attach((mbed::callback(obj->Callback)), timerTimes[idx] * 1ms);
 			timeoutTickers[idx].attach((mbed::callback(obj->Callback)), std::chrono::microseconds(timerTimes[idx]));
 		}
 		else
 		{
+			//timerTickers[idx].attach((mbed::callback(obj->Callback)), timerTimes[idx] * 1ms);
 			timerTickers[idx].attach((mbed::callback(obj->Callback)), std::chrono::microseconds(timerTimes[idx]));
 		}
 	}
