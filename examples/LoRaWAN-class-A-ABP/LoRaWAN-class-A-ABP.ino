@@ -6,7 +6,6 @@
    @date 2021-01-12
 
 */
-#include <Arduino.h>
 #include <LoRaWan-SX126x.h> //http://librarymanager/All#SX126x
 #include <SPI.h>
 
