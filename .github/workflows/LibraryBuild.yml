@@ -15,7 +15,7 @@ jobs:
 
     runs-on: ubuntu-latest # I picked Ubuntu to use shell scripts.
 
-    env:
+    #env:
       # Comma separated list without double quotes around the list. 
       #REQUIRED_LIBRARIES:
 
