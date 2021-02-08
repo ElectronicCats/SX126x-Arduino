@@ -126,28 +126,10 @@ Fill the structure with the HW configuration
 ----
 - If you use a microcontroller and a separate board with the SX126x transceiver you need to define the hwConfig structure to define the GPIO's used to connect the two chips.
 - If you use the Insight SIP4520 or the RAKwireless RAK4630/4631 modules the connections between the chips are fixed. In this case you do not need the hwConfig structure and can instead use simplified initialzation functions as shown below.
-----
-#### Module specific header files
-----
-- If you use a microcontroller and a separate board with the SX126x transceiver use the generic header files **`SX126x-Arduino.h`** and **`LoRaWan-Arduino.h`**
-- If you use the RAKwireless RAK4630/4631 modules use the module specific header files **`SX126x-RAK4630.h`** and **`LoRaWan-RAK4630.h`**
-- If you use the Insight SIP4520 modules use the module specific header files **`SX126x-ISP4520.h`** and **`LoRaWan-ISP4520.h`**
-----
+
 #### Initialize the LoRa HW
 ```cpp
   lora_hardware_init(hwConfig);
-```
-----
-#### Simplified LoRa HW initialization for ISP4520 module
-The ISP4520 module has the nRF52832 and SX1261 or 1262 chips integrated in a module. Therefore the hardware configuration is fixed. To initialize the LoRa chip you need only to specify if the module is based on a SX1261 (ISP4520 EU version) or on a SX1262 (ISP4520 US version).
-```cpp
-  lora_isp4520_init(SX1262);
-```
-----
-#### Simplified LoRa HW initialization for RAK4630/4631 module
-The RAK4630/4631 module has the nRF52840 and 1262 chips integrated in a module. Therefore the hardware configuration is fixed.    
-```cpp
-  lora_rak4630_init();
 ```
 ----
 #### Initialize the LoRa HW after CPU woke up from deep sleep
@@ -402,12 +384,4 @@ if (!lmh_setSubBandChannels(1))
 {
 	Serial.println("lmh_setSubBandChannels failed. Wrong sub band requested?");
 }
-```
-----
-## Installation
-In Arduino IDE open Sketch->Include Library->Manage Libraries then search for _**SX126x-Arduino**_    
-In PlatformIO open PlatformIO Home, switch to libraries and search for _**SX126x-Arduino**_. Or install the library in the terminal with _**`platformio lib install SX126x-Arduino`**_    
-
-For manual installation [download](https://github.com/beegee-tokyo/SX126x-Arduino) the archive, unzip it and place the SX126x-Android folder into the library directory.    
-In Arduino IDE this is usually _**`<arduinosketchfolder>/libraries/`**_    
-In PlatformIO this is usually _**`<user/.platformio/lib>`**_    
+```  
