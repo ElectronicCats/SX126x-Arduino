@@ -34,7 +34,7 @@ Maintainer: Miguel Luis and Gregory Cristian
  *
  *****************************************************************************/
 #ifdef NRF52_SERIES
-#if defined(!ARDUINO_ARCH_MBED)
+#if !defined(ARDUINO_ARCH_MBED)
 #include "boards/mcu/board.h"
 extern "C"
 {
