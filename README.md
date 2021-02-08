@@ -1,14 +1,34 @@
 # SX126x-Arduino 
 ![LibraryBuild](https://github.com/ElectronicCats/SX126x-Arduino/workflows/LibraryBuild/badge.svg)
 
-Arduino library for LoRa communication with Semtech SX126x chips. It is based on Semtech's SX126x libraries and adapted to the Arduino framework for ESP32, ESP8266 and nRF52832. It will not work with other uC's like AVR.    
+Arduino library for LoRa communication with Semtech SX126x chips. It is based on Semtech's SX126x libraries and adapted to the Arduino framework for ESP32, ESP8266, NRF52840 and nRF52832. It will not work with other uC's like AVR.    
 
-## General info
-I stumbled over the [SX126x LoRa family](https://www.semtech.com/products/wireless-rf/lora-transceivers) in a customer project. Most of the existing Arduino libraries for Semtech's SX127x family are unfortunately not working with this new generation LoRa chip. I found a usefull base library from Insight SIP which is based on the original Semtech SX126x library and changed it to work with the ESP32.   
-For now the library is tested with an [eByte E22-900M22S](http://www.ebyte.com/en/product-view-news.aspx?id=437) module connected to an ESP32 and an [Insight SIP ISP4520](https://www.insightsip.com/products/combo-smart-modules/isp4520) which combines a Nordic nRF52832 and a Semtech SX1262 in one module. It is as well tested with an [RAKwireless WisCore RAK4630](https://store.rakwireless.com/products) module    
+## Manual Installing
+To install this library:
 
+install it using the Arduino Library manager ("Sketch" -> "Include Library" -> "Manage Libraries..."), or
+download a zipfile from github using the "Download ZIP" button and install it using the IDE ("Sketch" -> "Include Library" -> "Add .ZIP Library..."
+clone this git repository into your sketchbook/libraries folder.
+For more info, see https://www.arduino.cc/en/Guide/Libraries
 
-### Based on    
+## Supported hardware
+This library is intended to be used with plain LoRa transceivers, connecting to them using SPI. In particular, the [SX126x LoRa family](https://www.semtech.com/products/wireless-rf/lora-transceivers) families are supported (which should include SX1262, SX1268 and SX126x which only differ in the available frequencies, bandwidths and spreading factors).
+
+Some of the supported pre-built board currently available in the market are:
+
+- Electronic Cats BastFrontier
+- RakWisBlock
+- [RAKwireless WisCore RAK4630](https://store.rakwireless.com/products)
+
+This library has been tested using:
+
+- ESP8266
+- ESP32
+- NRF52840 core mbed
+- NRF52832 RAK
+- [Insight SIP ISP4520](https://www.insightsip.com/products/combo-smart-modules/isp4520)
+
+## Based on    
 - Semtech open source code for SX126x chips [SX126xLib](https://os.mbed.com/teams/Semtech/code/SX126xLib/)    
 - Insight SIP open source code for ISP4520 module [LIBRARY - Source Code Examples](https://www.insightsip.com/fichiers_insightsip/pdf/ble/ISP4520/ISP4520_Source_Code.zip)    
 
@@ -19,7 +39,16 @@ For now the library is tested with an [eByte E22-900M22S](http://www.ebyte.com/e
   - Flexible setup for different modules (antenna control, TXCO control)    
   - Support LoRaWan node class A, B and C tested with single channel LoRaWan gateway    
 
-  ### Licenses    
+### Maintainer
+
+Electronic Cats invests time and resources providing this open source design, please support Electronic Cats and open-source hardware by purchasing products from Electronic Cats!
+
+<a href="https://github.com/sponsors/ElectronicCats">
+  <img src="https://electroniccats.com/wp-content/uploads/2020/07/Badge_GHS.png" height="104" />
+</a>
+
+## Licenses    
+
 Library published under MIT license    
 
 Semtech revised BSD license for codeparts used from Semtech S.A.   
