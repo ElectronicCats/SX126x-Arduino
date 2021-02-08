@@ -738,11 +738,14 @@ extern "C"
 		}
 	}
 
-	static char strlog1[64];
-	static char strlog2[64];
-	static char strlog3[64];
-	lmh_error_status lmh_init(lmh_callback_t *callbacks, lmh_param_t lora_param, bool otaa)
+	
+
+	lmh_error_status lmh_init(lmh_callback_t *callbacks, lmh_param_t lora_param, bool otaa, eDeviceClass nodeClass)
 	{
+		static char strlog1[64];
+	    static char strlog2[64];
+	    static char strlog3[64];
+
 		LoRaMacStatus_t error_status;
 		m_param = lora_param;
 		m_callbacks = callbacks;
@@ -835,6 +838,14 @@ extern "C"
 		mibReq.Param.AdrEnable = lora_param.adr_enable;
 		LoRaMacMibSetRequestConfirm(&mibReq);
 
+		mibReq.Type = MIB_CHANNELS_DEFAULT_DATARATE;
+		mibReq.Param.ChannelsDefaultDatarate = lora_param.tx_data_rate;
+		LoRaMacMibSetRequestConfirm(&mibReq);
+
+		mibReq.Type = MIB_CHANNELS_DATARATE;
+		mibReq.Param.ChannelsDatarate = lora_param.tx_data_rate;
+		LoRaMacMibSetRequestConfirm(&mibReq);
+
 		mibReq.Type = MIB_CHANNELS_TX_POWER;
 		mibReq.Param.ChannelsTxPower = lora_param.tx_power;
 		LoRaMacMibSetRequestConfirm(&mibReq);
@@ -844,7 +855,7 @@ extern "C"
 		LoRaMacMibSetRequestConfirm(&mibReq);
 
 		mibReq.Type = MIB_DEVICE_CLASS;
-		mibReq.Param.Class = CLASS_A;
+		mibReq.Param.Class = nodeClass;
 		LoRaMacMibSetRequestConfirm(&mibReq);
 
 		LoRaMacTestSetDutyCycleOn(_dutyCycleEnabled);

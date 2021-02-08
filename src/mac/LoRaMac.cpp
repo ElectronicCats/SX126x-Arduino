@@ -2315,7 +2315,7 @@ extern "C"
 		return LORAMAC_STATUS_OK;
 	}
 
-	LoRaMacStatus_t LoRaMacInitialization(LoRaMacPrimitives_t *primitives, LoRaMacCallback_t *callbacks, LoRaMacRegion_t region)
+	LoRaMacStatus_t LoRaMacInitialization(LoRaMacPrimitives_t *primitives, LoRaMacCallback_t *callbacks, LoRaMacRegion_t region, eDeviceClass nodeClass)
 	{
 		GetPhyParams_t getPhy;
 		PhyParam_t phyParam;
@@ -2343,7 +2343,7 @@ extern "C"
 
 		LoRaMacFlags.Value = 0;
 
-		LoRaMacDeviceClass = CLASS_A;
+		LoRaMacDeviceClass = nodeClass;
 		LoRaMacState = LORAMAC_IDLE;
 
 		JoinRequestTrials = 0;

@@ -136,7 +136,7 @@ extern "C"
  *
  * @retval error status
  */
-	lmh_error_status lmh_init(lmh_callback_t *callbacks, lmh_param_t lora_param, bool otaa);
+	lmh_error_status lmh_init(lmh_callback_t *callbacks, lmh_param_t lora_param, bool otaa, eDeviceClass nodeClass = CLASS_A);
 
 	/**@brief Send data
  *
