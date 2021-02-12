@@ -46,7 +46,7 @@ int RADIO_RXEN = 3;  // LORA ANTENNA RX ENABLE
 
 /**@brief Structure containing LoRaWan parameters, needed for lmh_init()
 */
-static lmh_param_t lora_param_init = {LORAWAN_ADR_ON, LORAWAN_DATERATE, LORAWAN_PUBLIC_NETWORK, JOINREQ_NBTRIALS, LORAWAN_TX_POWER, LORAWAN_DUTYCYCLE_OFF};
+static lmh_param_t lora_param_init = {LORAWAN_ADR_OFF, LORAWAN_DATERATE, LORAWAN_PUBLIC_NETWORK, JOINREQ_NBTRIALS, LORAWAN_TX_POWER, LORAWAN_DUTYCYCLE_OFF};
 
 // Foward declaration
 static void lorawan_has_joined_handler(void);
