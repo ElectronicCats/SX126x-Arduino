@@ -619,15 +619,27 @@ extern "C"
 		// Setup timers
 		if (IsRxWindowsEnabled == true)
 		{
+			#if defined(ARDUINO_ARCH_MBED)
+			TimerSetValue(&RxWindowTimer1, RxWindow1Delay*1000);
+			#else
 			TimerSetValue(&RxWindowTimer1, RxWindow1Delay);
+			#endif
 			TimerStart(&RxWindowTimer1);
+			#if defined(ARDUINO_ARCH_MBED)
+			TimerSetValue(&RxWindowTimer2, RxWindow2Delay*1000);
+			#else
 			TimerSetValue(&RxWindowTimer2, RxWindow2Delay);
+			#endif
 			TimerStart(&RxWindowTimer2);
 			if ((LoRaMacDeviceClass == CLASS_C) || (NodeAckRequested == true))
 			{
 				getPhy.Attribute = PHY_ACK_TIMEOUT;
 				phyParam = RegionGetPhyParam(LoRaMacRegion, &getPhy);
-				TimerSetValue(&AckTimeoutTimer, RxWindow2Delay + phyParam.Value);
+				#if defined(ARDUINO_ARCH_MBED)
+				TimerSetValue(&AckTimeoutTimer, (RxWindow2Delay + phyParam.Value)*1000);
+				#else
+				TimerSetValue(&AckTimeoutTimer, (RxWindow2Delay + phyParam.Value));
+				#endif
 				TimerStart(&AckTimeoutTimer);
 			}
 		}
@@ -683,7 +695,11 @@ extern "C"
 		LoRaMacFlags.Bits.MacDone = 1;
 
 		// Trig OnMacCheckTimerEvent call as soon as possible
+		#if defined(ARDUINO_ARCH_MBED)
+		TimerSetValue(&MacStateCheckTimer, 1000);
+		#else
 		TimerSetValue(&MacStateCheckTimer, 1);
+		#endif
 		TimerStart(&MacStateCheckTimer);
 	}
 
@@ -1102,7 +1118,11 @@ extern "C"
 		LoRaMacFlags.Bits.MacDone = 1;
 
 		// Trig OnMacCheckTimerEvent call as soon as possible
+		#if defined(ARDUINO_ARCH_MBED)
+		TimerSetValue(&MacStateCheckTimer, 1000);
+		#else
 		TimerSetValue(&MacStateCheckTimer, 1);
+		#endif
 		TimerStart(&MacStateCheckTimer);
 	}
 
@@ -1966,7 +1986,11 @@ extern "C"
 		{
 			// Send later - prepare timer
 			LoRaMacState |= LORAMAC_TX_DELAYED;
+			#if defined(ARDUINO_ARCH_MBED)
+			TimerSetValue(&TxDelayedTimer, dutyCycleTimeOff*1000);
+			#else
 			TimerSetValue(&TxDelayedTimer, dutyCycleTimeOff);
+			#endif
 			TimerStart(&TxDelayedTimer);
 
 			return LORAMAC_STATUS_OK;
@@ -2291,7 +2315,7 @@ extern "C"
 		return LORAMAC_STATUS_OK;
 	}
 
-	LoRaMacStatus_t LoRaMacInitialization(LoRaMacPrimitives_t *primitives, LoRaMacCallback_t *callbacks, LoRaMacRegion_t region)
+	LoRaMacStatus_t LoRaMacInitialization(LoRaMacPrimitives_t *primitives, LoRaMacCallback_t *callbacks, LoRaMacRegion_t region, eDeviceClass nodeClass)
 	{
 		GetPhyParams_t getPhy;
 		PhyParam_t phyParam;
@@ -2319,7 +2343,7 @@ extern "C"
 
 		LoRaMacFlags.Value = 0;
 
-		LoRaMacDeviceClass = CLASS_A;
+		LoRaMacDeviceClass = nodeClass;
 		LoRaMacState = LORAMAC_IDLE;
 
 		JoinRequestTrials = 0;

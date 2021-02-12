@@ -47,7 +47,11 @@ extern "C"
 /*!
  * Check the Mac layer state every MAC_STATE_CHECK_TIMEOUT in ms
  */
+#if defined(ARDUINO_ARCH_MBED)
+#define MAC_STATE_CHECK_TIMEOUT 1000000
+#else
 #define MAC_STATE_CHECK_TIMEOUT 1000
+#endif
 
 /*!
  * Maximum number of times the MAC layer tries to get an acknowledge.
@@ -1681,7 +1685,7 @@ extern "C"
  *          \ref LORAMAC_STATUS_PARAMETER_INVALID,
  *          \ref LORAMAC_STATUS_REGION_NOT_SUPPORTED.
  */
-	LoRaMacStatus_t LoRaMacInitialization(LoRaMacPrimitives_t *primitives, LoRaMacCallback_t *callbacks, LoRaMacRegion_t region);
+	LoRaMacStatus_t LoRaMacInitialization(LoRaMacPrimitives_t *primitives, LoRaMacCallback_t *callbacks, LoRaMacRegion_t region, eDeviceClass nodeClass = CLASS_A);
 
 	/*!
  * \brief   Returns the Device Address set by the LoRaWan server

@@ -231,7 +231,9 @@ extern "C"
 		log_i("[FREQ] REGION_US915");
 #endif
 #ifdef NRF52_SERIES
+  #ifndef ARDUINO_ARCH_MBED
 		ADALOG("FREQ", "REGION_US915");
+  #endif
 #endif
 #elif defined(REGION_US915_HYBRID)
 		uint16_t subBandChannelMask[6] = {0x0000,
@@ -553,7 +555,11 @@ extern "C"
 						LoRaMacTestSetDutyCycleOn(false);
 
 						TimerInit(&ComplianceTestTxNextPacketTimer, OnComplianceTestTxNextPacketTimerEvent);
+						#if defined(ARDUINO_ARCH_MBED)
+						TimerSetValue(&ComplianceTestTxNextPacketTimer, 5000000);
+						#else
 						TimerSetValue(&ComplianceTestTxNextPacketTimer, 5000);
+						#endif
 
 						// confirm test mode activation
 						compliance_test_tx();
@@ -732,11 +738,14 @@ extern "C"
 		}
 	}
 
-	static char strlog1[64];
-	static char strlog2[64];
-	static char strlog3[64];
-	lmh_error_status lmh_init(lmh_callback_t *callbacks, lmh_param_t lora_param, bool otaa)
+	
+
+	lmh_error_status lmh_init(lmh_callback_t *callbacks, lmh_param_t lora_param, bool otaa, eDeviceClass nodeClass)
 	{
+		static char strlog1[64];
+	    static char strlog2[64];
+	    static char strlog3[64];
+
 		LoRaMacStatus_t error_status;
 		m_param = lora_param;
 		m_callbacks = callbacks;
@@ -760,7 +769,9 @@ extern "C"
 			log_i("OTAA\n%s\nDevAdd=%08X\n%s\n%s", strlog1, DevAddr, strlog2, strlog3);
 #endif
 #ifdef NRF52_SERIES
+  #ifndef ARDUINO_ARCH_MBED
 			ADALOG("OTAA", "\n%s\nDevAdd=%08X\n%s\n%s", strlog1, DevAddr, strlog2, strlog3);
+  #endif
 #endif
 		}
 		else
@@ -782,7 +793,9 @@ extern "C"
 			log_i("ABP\n%s\nDevAdd=%08X\n%s\n%s", strlog1, DevAddr, strlog2, strlog3);
 #endif
 #ifdef NRF52_SERIES
+#ifndef ARDUINO_ARCH_MBED
 			ADALOG("ABP", "\n%s\nDevAdd=%08X\n%s\n%s", strlog1, DevAddr, strlog2, strlog3);
+#endif
 #endif
 		}
 
@@ -825,6 +838,14 @@ extern "C"
 		mibReq.Param.AdrEnable = lora_param.adr_enable;
 		LoRaMacMibSetRequestConfirm(&mibReq);
 
+		mibReq.Type = MIB_CHANNELS_DEFAULT_DATARATE;
+		mibReq.Param.ChannelsDefaultDatarate = lora_param.tx_data_rate;
+		LoRaMacMibSetRequestConfirm(&mibReq);
+
+		mibReq.Type = MIB_CHANNELS_DATARATE;
+		mibReq.Param.ChannelsDatarate = lora_param.tx_data_rate;
+		LoRaMacMibSetRequestConfirm(&mibReq);
+
 		mibReq.Type = MIB_CHANNELS_TX_POWER;
 		mibReq.Param.ChannelsTxPower = lora_param.tx_power;
 		LoRaMacMibSetRequestConfirm(&mibReq);
@@ -834,7 +855,7 @@ extern "C"
 		LoRaMacMibSetRequestConfirm(&mibReq);
 
 		mibReq.Type = MIB_DEVICE_CLASS;
-		mibReq.Param.Class = CLASS_A;
+		mibReq.Param.Class = nodeClass;
 		LoRaMacMibSetRequestConfirm(&mibReq);
 
 		LoRaMacTestSetDutyCycleOn(_dutyCycleEnabled);
